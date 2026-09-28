@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Numbers Mini 分析</title>
+<style>
+body{margin:0;background:#f4f5f7;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif}
+main{max-width:540px;margin:auto;padding:14px}.card{background:#fff;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 2px 12px #0000000d}
+h1{font-size:25px;margin:0 0 5px}h2{font-size:18px;margin:0 0 12px}.muted{font-size:12px;color:#777}
+.hero{text-align:center}.last{font-size:50px;font-weight:900;letter-spacing:10px;margin:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.pick{background:#f0f1f3;border-radius:15px;padding:13px;text-align:center}.pick:first-child{background:#111;color:white}
+.rank{font-size:12px}.num{font-size:32px;font-weight:900;margin:4px}.score{font-size:12px}
+.tag{display:inline-block;background:#eee;border-radius:20px;padding:7px 10px;margin:3px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td{padding:8px 2px;border-bottom:1px solid #eee}
+.warn{background:#fff4cf;border-radius:12px;padding:12px;font-size:12px;line-height:1.6}
+</style></head><body><main>
+<div class="card"><h1>Numbers Mini 分析</h1><div id="updated" class="muted">資料更新中…</div></div>
+<div class="card hero"><div class="muted">上一期開獎</div><div id="last" class="last">---</div><div>Mini：<b id="mini">--</b></div><div id="sales" class="muted"></div></div>
+<div class="card"><h2>下一期推薦</h2><div id="picks" class="grid"></div><div class="warn" style="margin-top:12px">本工具是歷史資料統計研究，不代表能預測或保證中獎。</div></div>
+<div class="card"><h2>第一推薦分析理由</h2><div id="why"></div></div>
+<div class="card"><h2>熱門／冷門數字</h2><div id="digits"></div></div>
+<div class="card"><h2>最近10期銷售實績</h2><table id="salesTable"></table></div>
+<div class="card"><div class="muted">資料來源：みずほ銀行 ナンバーズ3 官方資料</div></div>
+</main>
+<script>
+async function main(){
+ const r=await fetch("data.json?"+Date.now(),{cache:"no-store"}).then(x=>x.json());
+ document.getElementById("updated").textContent="資料更新："+r.updated_jst+"　｜　下一期："+r.next_draw;
+ document.getElementById("last").textContent=r.last.number;
+ document.getElementById("mini").textContent=r.last.number.slice(-2);
+ document.getElementById("sales").textContent="第"+r.last.no+"回　"+r.last.date+"　銷售實績 ¥"+Number(r.last.sales).toLocaleString();
+ document.getElementById("picks").innerHTML=r.top3.map((x,i)=>`<div class="pick"><div class="rank">${["第一","第二","第三"][i]}推薦</div><div class="num">${x.pair}</div><div class="score">分析分數 ${x.score.toFixed(1)}</div></div>`).join("");
+ const t=r.top3[0];
+ document.getElementById("why").innerHTML=`<p>十位「${t.pair[0]}」最近50期：${t.tens}次</p><p>個位「${t.pair[1]}」最近50期：${t.units}次</p><p>組合「${t.pair}」最近100期：${t.pair_hits}次</p><p>遺漏：${t.miss}期</p>`;
+ document.getElementById("digits").innerHTML="<b>熱門：</b>"+r.hot.map(x=>`<span class="tag">🔥 ${x.d}：${x.c}次</span>`).join("")+"<br><b>冷門：</b>"+r.cold.map(x=>`<span class="tag">❄️ ${x.d}：${x.c}次</span>`).join("");
+ document.getElementById("salesTable").innerHTML=r.recent10.map(x=>`<tr><td>第${x.no}回<br>${x.date}</td><td>${x.number}<br>Mini ${x.number.slice(-2)}</td><td>¥${Number(x.sales).toLocaleString()}</td></tr>`).join("");
+}
+main().catch(()=>document.getElementById("updated").textContent="資料讀取失敗，請稍後再開啟。");
+</script></body></html>
